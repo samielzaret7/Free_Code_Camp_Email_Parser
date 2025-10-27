@@ -1,0 +1,3 @@
+# Ignore all log folders, keep this file so folder exists in repo
+*
+!.gitignore
