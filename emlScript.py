@@ -7,6 +7,7 @@ import os
 import time
 import asyncio
 import shutil
+import random
 
 
 async def keep_alive_task():
@@ -110,12 +111,14 @@ def request_func(html_list):
             print(r.json())
             logging.info(f"Request posted successfully: {r.json()}")
             print(f"Request posted successfully: {r.json()}")
+            time.sleep(random.uniform(2.5, 4.0))
             
         except Exception as e:
             print(f"There was an error when posting the item {item}")
             print(f"Exception: {e}")
             logging.error(f"Exception: {e}")
             print(f"Exception: {e}")
+            time.sleep(random.uniform(2.5, 4.0))
 
     total_items_string = f"Total Items Staged: {total_items}"
     print(total_items_string)

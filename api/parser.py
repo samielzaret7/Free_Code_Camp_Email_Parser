@@ -1,4 +1,4 @@
-import os, httpx, json
+import os, httpx, json, time
 from .models import ParseResult
 from .categories import ALLOWED_CATEGORIES
 #from dotenv import load_dotenv
@@ -44,20 +44,45 @@ HTML>>>"""
 
 def _ask_groq(model: str, html: str, allowed: list[str]) -> dict:
     content = PROMPT.format(
-        html=html[:150000],
+        html=html,
         allowed="\n- " + "\n- ".join(allowed)
     )
     body = {
-        "model": "llama-3.1-8b-instant",
+        "model": model,
         "temperature": 0,
         "response_format": {"type": "json_object"},
         "messages": [{"role":"user","content": content}],
     }
     headers = {"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"}
+
+    
     with httpx.Client(timeout=45) as client:
-        r = client.post(GROQ_URL, headers=headers, json=body)
-        r.raise_for_status()
-        return json.loads(r.json()["choices"][0]["message"]["content"])
+        for attempt in range(6):  
+            r = client.post(GROQ_URL, headers=headers, json=body)
+            if r.status_code == 200:
+                return json.loads(r.json()["choices"][0]["message"]["content"])
+            if r.status_code == 429:
+                wait = 2 ** attempt
+               
+                reset = r.headers.get("x-ratelimit-reset-requests") or r.headers.get("retry-after")
+                if reset:
+                    try:
+                        wait = max(wait, int(float(reset)))
+                    except:  
+                        pass
+                print(f"[groq] 429 rate-limited. sleeping {wait}s...")
+                time.sleep(wait)
+                continue
+            
+            try:
+                detail = r.json()
+            except Exception:
+                detail = r.text
+            raise httpx.HTTPStatusError(f"{r.status_code}: {detail}", request=r.request, response=r)
+
+   
+    return {"items": []}
+
 
 def extract_items(html: str) -> ParseResult:
     try:
