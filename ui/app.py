@@ -1,8 +1,9 @@
 import os
 import pandas as pd
 import streamlit as st
-#from dotenv import load_dotenv
-#load_dotenv()
+from dotenv import load_dotenv
+import time
+load_dotenv()
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -77,7 +78,7 @@ for r in rows:
         max_selections=3
         )
 
-        keep = st.checkbox("Keep this course", value=True, key=f"keep-{r['id']}")
+        keep = st.checkbox("Keep this course", value=False, key=f"keep-{r['id']}")
         keep_map[r["id"]] = (keep, final_cats)
 
 
@@ -112,13 +113,18 @@ if do_save and selected_to_save:
     try:
         insert_main(selected_to_save)
         delete_staging(selected_to_delete)
-        st.success(f"Saved {len(selected_to_save)} and removed {len(selected_to_delete)} from staging. Refresh to see changes.")
+        st.success(f"Saved {len(selected_to_save)} and removed {len(selected_to_delete)} from staging. Page will refresh in 5 seconds.")
+        time.sleep(5)
+        st.rerun()
+
     except Exception as e:
         st.error(f"Save failed: {e}")
 
 if do_reject and selected_to_delete and not do_save:
     try:
         delete_staging(selected_to_delete)
-        st.info(f"Removed {len(selected_to_delete)} items from staging.")
+        st.info(f"Removed {len(selected_to_delete)} items from staging. Page will refresh in 5 seconds.")
+        time.sleep(5)
+        st.rerun()
     except Exception as e:
         st.error(f"Reject failed: {e}")

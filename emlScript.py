@@ -6,6 +6,7 @@ from datetime import date
 import os
 import time
 import asyncio
+import shutil
 
 
 async def keep_alive_task():
@@ -16,9 +17,8 @@ async def keep_alive_task():
 async def main():
     await keep_alive_task()
 
-def eml_to_html(parent_folder):
 
-    print("eml_to_html started execution.")
+def eml_to_html(parent_folder):
 
     logging.info('eml_to_html started execution.')
 
@@ -26,7 +26,10 @@ def eml_to_html(parent_folder):
 
     html_list = []
     total_eml_files = 0
+    total_processed_files = 0
+    total_failed_files = 0
     for _,_,files in os.walk(folder_with_files):
+
         for file in files:
             if file.endswith(".eml"):
 
@@ -36,11 +39,14 @@ def eml_to_html(parent_folder):
             
                 file_data = {}
 
-                with open(file_path, 'rb') as file:
-                    msg = BytesParser(policy=policy.default).parse(file)
-    
-            
+                if not os.path.exists(file_path):
+                    continue
+
+                with open(file_path, 'rb') as opened_file:
+                    msg = BytesParser(policy=policy.default).parse(opened_file)
+                   
                 plain_text_part = msg.get_body(preferencelist=('plain',))
+
                 if plain_text_part:
                     try:
                         file_data["From"] = msg.get("From").split("<")[1].replace(">","")
@@ -58,21 +64,28 @@ def eml_to_html(parent_folder):
                         file_data["Body"] = "<html><body>Error when getting Body data</body></html>"
 
                     html_list.append(file_data)
+                    total_processed_files+=1
+
+                    processed_file = os.path.join(folder_with_files, "Processed", file)
+                    shutil.move(file_path,processed_file)
+                    
                 else:
                     file_data["From"] = "Couldn't get From data"
                     file_data["Subject"] = "Couldn't get Subject data"
                     file_data["Body"] = "<html><body>No content found</body></html>"
 
                     html_list.append(file_data)
+                    total_failed_files+=1
+                    
+                
+                
 
-    
-    print(f"Total eml files in {folder_with_files}: {total_eml_files}")
-    print(f"Total items in html_list: {len(html_list)}")
     logging.info(f"Total eml files in {folder_with_files}: {total_eml_files}")
+    logging.info(f"Total files successfully processed: {total_processed_files}")
+    logging.info(f"Total failed files: {total_failed_files}")
     logging.info(f"Total items in html_list: {len(html_list)}")
     
     return html_list
-
 
 
 
