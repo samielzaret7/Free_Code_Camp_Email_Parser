@@ -1,0 +1,11 @@
+# Shared Gmail utilities (used by legacy Python pipeline)
+gmail-utils @ git+https://github.com/samielzaret7/gmail-utils.git
+
+# Legacy Python ingest pipeline (emlScript.py)
+requests
+
+# Streamlit approval UI
+streamlit
+httpx
+python-dotenv
+pandas

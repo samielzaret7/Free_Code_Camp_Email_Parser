@@ -1,9 +1,8 @@
-import os, httpx, json, time
+import os, httpx, json, time, logging
 from .models import ParseResult
 from .categories import ALLOWED_CATEGORIES
-#from dotenv import load_dotenv
 
-#load_dotenv()
+logger = logging.getLogger(__name__)
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -85,9 +84,21 @@ def _ask_groq(model: str, html: str, allowed: list[str]) -> dict:
 
 
 def extract_items(html: str) -> ParseResult:
+    primary_model = "llama-3.1-8b-instant"
+    fallback_model = "gemma2-9b-it"
     try:
-        data = _ask_groq("llama-3.1-8b-instant", html, ALLOWED_CATEGORIES)
+        data = _ask_groq(primary_model, html, ALLOWED_CATEGORIES)
     except Exception:
-       
-        data = _ask_groq("gemma2-9b-it", html, ALLOWED_CATEGORIES)
+        logger.warning(
+            "Primary model '%s' failed, falling back to '%s'",
+            primary_model, fallback_model, exc_info=True,
+        )
+        try:
+            data = _ask_groq(fallback_model, html, ALLOWED_CATEGORIES)
+        except Exception:
+            logger.error(
+                "Fallback model '%s' also failed — returning empty result",
+                fallback_model, exc_info=True,
+            )
+            data = {"items": []}
     return ParseResult(**data)

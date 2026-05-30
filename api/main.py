@@ -7,7 +7,6 @@ from .categories import ALLOWED_CATEGORIES
 
 
 TABLE_STAGING = os.environ.get("TABLE_STAGING", "courses_staging")
-TODAY = date.today().isoformat()
 
 app = FastAPI(title="FCC Email Ingest")
 
@@ -23,6 +22,8 @@ async def inbound(req: Request):
 
     parsed = extract_items(html)
 
+    today = date.today().isoformat()  # computed per-request, not once at startup
+
     rows = []
     for it in parsed.items:
         cats = (getattr(it, "categories", None) or [])
@@ -36,11 +37,11 @@ async def inbound(req: Request):
             "link": it.link,
             "time": it.time,
             "description": it.description,
-            "categories": cats or None,                    
+            "categories": cats or None,
             "category": best,
             "category_confidence": getattr(it, "category_confidence", None),
             "suggested_new_category": getattr(it, "suggested_new_category", None),
-            "date_added": TODAY,                          
+            "date_added": today,
         })
 
     if rows:

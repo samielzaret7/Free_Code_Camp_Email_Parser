@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import time
-load_dotenv()
+load_dotenv(find_dotenv())  # walks up to find the root .env (single source of truth)
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

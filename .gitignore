@@ -1,8 +1,29 @@
+# macOS
 .DS_Store
-.env
 
-# Ignore Python cache and compiled files
+# Environment variables
+.env
+ui/.env
+
+# Google OAuth credentials (user-specific)
+credentials.json
+token.json
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Conda environment
+.conda/
+
+# Runtime logs
+logs/
+
+# EML files
+EML_Files/
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
